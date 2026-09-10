@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      # ServiceLens has no runtime dependencies and the test suite does not
+      # open a window, so there is nothing to install and no display to
+      # arrange. The desktop interface is exercised manually.
+      - name: Compile every module
+        run: python -W error -m compileall -q servicelens tests
+
+      - name: Confirm the runtime dependency list is empty
+        shell: python
+        run: |
+          import tomllib
+          with open("pyproject.toml", "rb") as handle:
+              project = tomllib.load(handle)["project"]
+          dependencies = project.get("dependencies", [])
+          assert dependencies == [], f"unexpected dependencies: {dependencies}"
+          print("runtime dependencies: none")
+
+      - name: Run the test suite
+        run: python -m unittest discover -s tests -t . -v
+
+      - name: Generate the demonstration workbook
+        run: python -m servicelens.demo.generator --reference 2026-06-15
+
+      - name: Analyse the generated workbook end to end
+        shell: python
+        run: |
+          from servicelens.analysis import analyze_workbook
+          analysis = analyze_workbook("demo/servicelens_demo_workbook.xlsx")
+          metrics = analysis.metrics
+          assert analysis.exclusions.reconciles()
+          assert analysis.unfired_rules() == [], analysis.unfired_rules()
+          print(f"{metrics.total:,} retained, {metrics.with_findings:,} flagged "
+                f"({metrics.exception_rate:.1%}), all rules fired")
