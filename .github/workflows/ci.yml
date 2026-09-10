@@ -50,6 +50,10 @@ jobs:
 
       - name: Analyse the generated workbook end to end
         shell: python
+        # A `shell: python` step runs from a temporary file, so the workspace
+        # is not on sys.path unless it is put there.
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           from servicelens.analysis import analyze_workbook
           analysis = analyze_workbook("demo/servicelens_demo_workbook.xlsx")
