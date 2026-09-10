@@ -143,7 +143,10 @@ class Application(tk.Tk):
             "work_orders": WorkOrders(self.content, theme,
                                       on_open_record=self.open_record),
             "review": Review(self.content, theme),
-            "reports": Reports(self.content, theme),
+            "reports": Reports(
+                self.content, theme,
+                # The CSV can export exactly what the explorer is showing.
+                current_view=lambda: self.views["work_orders"].visible),
             "rules": Rules(self.content, theme),
         }
         self.titles = {

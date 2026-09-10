@@ -128,10 +128,22 @@ class ImportResult:
     header_row: int = 0
     rows_read: int = 0
     blank_rows_skipped: int = 0
+    preamble: list = field(default_factory=list)
+    """Text found above the header row.
+
+    Exports often carry a title or a filter description there. It is not
+    data, but it is provenance worth carrying into a report - and it is how
+    a demonstration dataset can announce itself as one.
+    """
 
     @property
     def count(self) -> int:
         return len(self.work_orders)
+
+    @property
+    def notice(self) -> str:
+        """The most descriptive line above the header row, if any."""
+        return max(self.preamble, key=len) if self.preamble else ""
 
 
 def find_header_row(sheet: Sheet) -> int:
@@ -209,6 +221,9 @@ def normalize_sheet(sheet: Sheet, source_path: str = "") -> ImportResult:
         sheet_name=sheet.name,
         source_path=source_path,
         header_row=sheet.row_numbers[header_index],
+        preamble=[" ".join(" ".join(row).split())
+                  for row in sheet.rows[:header_index]
+                  if any(cell.strip() for cell in row)],
     )
 
     for offset, row in enumerate(sheet.rows[header_index + 1:],

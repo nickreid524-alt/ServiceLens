@@ -27,6 +27,12 @@ HEADLESS_MODULES = (
     "servicelens.demo.corpus",
     "servicelens.demo.generator",
     "servicelens.demo.xlsx_writer",
+    "servicelens.reporting",
+    "servicelens.reporting.pdf",
+    "servicelens.reporting.summary",
+    "servicelens.reporting.review_pack",
+    "servicelens.reporting.exception_register",
+    "servicelens.reporting.csv_export",
 )
 
 
@@ -41,9 +47,13 @@ class HeadlessImportTests(unittest.TestCase):
                     f"tkinter was imported by a headless module ({name})")
             return real_import(name, *arguments, **keywords)
 
-        removed = [name for name in list(sys.modules)
-                   if name.startswith("servicelens")]
-        for name in removed:
+        # Import fresh copies with tkinter blocked, then put the original
+        # module objects back. Leaving the fresh copies in place would hand
+        # later tests a second copy of every enum, and identity comparisons
+        # between the two would fail for no visible reason.
+        originals = {name: module for name, module in sys.modules.items()
+                     if name.startswith("servicelens")}
+        for name in originals:
             del sys.modules[name]
 
         builtins.__import__ = blocked
@@ -52,6 +62,9 @@ class HeadlessImportTests(unittest.TestCase):
                 importlib.import_module(name)
         finally:
             builtins.__import__ = real_import
+            for name in [n for n in sys.modules if n.startswith("servicelens")]:
+                del sys.modules[name]
+            sys.modules.update(originals)
 
     def test_tkinter_is_not_already_loaded_by_the_package(self):
         for name in [n for n in list(sys.modules)
