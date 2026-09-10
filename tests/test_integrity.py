@@ -175,7 +175,8 @@ class RuleSetTests(unittest.TestCase):
         self.assertEqual(len(entries), len(integrity.INTEGRITY_RULES))
         self.assertEqual(
             set(entries[0]),
-            {"key", "title", "severity", "domain", "explanation", "reads"})
+            {"key", "title", "severity", "domain", "explanation", "reads",
+             "limits"})
 
 
 if __name__ == "__main__":

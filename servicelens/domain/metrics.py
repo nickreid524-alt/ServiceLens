@@ -135,7 +135,7 @@ class Metrics:
 
     @property
     def exception_rate(self) -> float:
-        """Share of work orders carrying at least one finding, 0.0 to 1.0."""
+        """Proportion of the board with something raised against it."""
         return self.with_findings / self.total if self.total else 0.0
 
     @property

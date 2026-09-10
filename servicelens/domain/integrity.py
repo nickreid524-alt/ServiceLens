@@ -79,7 +79,8 @@ MISSING_OPENED_DATE = Rule(
         "Without an opened date the work order has no age, so no aging or "
         "response rule can be applied to it."
     ),
-    basis=lambda c: "Opened Date is blank or could not be read.",
+    basis=lambda c: "Opened Date is blank, or holds something that is "
+                    "not a date.",
     explanation="The opened date is missing or unreadable.",
     reads=("Opened Date",),
 )

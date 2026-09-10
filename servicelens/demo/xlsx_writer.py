@@ -1,7 +1,7 @@
 """A minimal .xlsx writer, standard library only.
 
 Used solely to produce the demonstration workbook. ServiceLens itself never
-writes to a workbook - source files are always opened read-only.
+writes to a workbook - source files are only ever read from.
 
 The output is a real Office Open XML package rather than a CSV with a
 misleading extension, so the demo workbook exercises the reader properly:

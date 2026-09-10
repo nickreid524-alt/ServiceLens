@@ -1,5 +1,7 @@
 """Operational rules, tested at their threshold boundaries."""
 
+import ast
+import pathlib
 import unittest
 
 from servicelens.config import DEFAULT_POLICY
@@ -293,6 +295,45 @@ class RuleSetTests(unittest.TestCase):
         for rule in directives.DIRECTIVE_RULES:
             self.assertTrue(rule.explanation, rule.key)
             self.assertTrue(rule.reads, rule.key)
+
+    def test_declared_limits_name_real_policy_fields(self):
+        for rule in directives.DIRECTIVE_RULES:
+            for name in rule.limits:
+                self.assertTrue(hasattr(LIMITS, name),
+                                f"{rule.key} names unknown threshold {name}")
+
+    def test_every_threshold_a_rule_reads_is_declared(self):
+        """A rule that reads `c.limits.x` must declare "x" in `limits`.
+
+        Parsed from the source rather than guessed from wording, so the rule
+        catalogue can never under-report a threshold that is actually in
+        force. Without this, adding a threshold to a rule body and forgetting
+        to declare it would silently hide it from the Rules screen.
+        """
+        source = pathlib.Path(directives.__file__).read_text(encoding="utf-8")
+        for call in (n for n in ast.walk(ast.parse(source))
+                     if isinstance(n, ast.Call)
+                     and getattr(n.func, "id", "") == "Rule"):
+            keywords = {k.arg: k.value for k in call.keywords}
+            key = ast.literal_eval(keywords["key"])
+            used = {
+                node.attr
+                for node in ast.walk(call)
+                if isinstance(node, ast.Attribute)
+                and isinstance(node.value, ast.Attribute)
+                and node.value.attr == "limits"
+            }
+            declared = set(ast.literal_eval(keywords.get(
+                "limits", ast.Tuple(elts=[], ctx=ast.Load()))))
+            self.assertEqual(
+                used, declared,
+                f"{key} reads {sorted(used)} but declares {sorted(declared)}")
+
+    def test_the_catalogue_reports_the_active_threshold(self):
+        strict = DEFAULT_POLICY.with_thresholds(stale_days=99)
+        entry = next(e for e in directives.DIRECTIVE_RULES.catalogue(strict)
+                     if e["key"] == "stale_work_order")
+        self.assertEqual(entry["limits"], [("stale_days", 99)])
 
     def test_every_message_names_an_action(self):
         # A directive is only useful if it asks for something.

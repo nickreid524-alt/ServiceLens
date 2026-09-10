@@ -80,6 +80,7 @@ EMERGENCY_UNRESOLVED = Rule(
     ),
     explanation="Emergency priority, still open, and past the emergency "
                 "response threshold.",
+    limits=("emergency_response_days",),
     reads=("Priority", "Status", "Opened Date"),
 )
 
@@ -103,6 +104,7 @@ SAFETY_WORK_OPEN = Rule(
     ),
     explanation="Safety work, still open, and past the safety response "
                 "threshold.",
+    limits=("safety_response_days",),
     reads=("Work Type", "Status", "Opened Date"),
 )
 
@@ -126,6 +128,7 @@ HIGH_PRIORITY_AGING = Rule(
     ),
     explanation="High priority, still open, and past the high priority "
                 "threshold.",
+    limits=("high_priority_days",),
     reads=("Priority", "Status", "Opened Date"),
 )
 
@@ -147,6 +150,7 @@ STALE_WORK_ORDER = Rule(
         "days."
     ),
     explanation="Open beyond the stale threshold.",
+    limits=("stale_days",),
     reads=("Status", "Opened Date"),
 )
 
@@ -170,6 +174,7 @@ AGING_WORK_ORDER = Rule(
     ),
     explanation="The work order is open between the aging and stale "
                 "thresholds.",
+    limits=("aging_days", "stale_days"),
     reads=("Status", "Opened Date"),
 )
 
@@ -193,6 +198,7 @@ NO_RECENT_UPDATE = Rule(
     ),
     explanation="Nothing has been recorded against the work order for at "
                 "least the quiet threshold.",
+    limits=("no_update_days",),
     reads=("Status", "Last Update Date", "Opened Date"),
 )
 
@@ -241,6 +247,7 @@ PARTS_HOLD_EXTENDED = Rule(
         f"{c.limits.parts_hold_days} days."
     ),
     explanation="Status is Awaiting Parts beyond the parts hold threshold.",
+    limits=("parts_hold_days",),
     reads=("Status", "Opened Date"),
 )
 
@@ -262,10 +269,11 @@ HOLD_WITHOUT_EXPLANATION = Rule(
         + ("blank." if not c.wo.last_note.strip()
            else f"'{c.wo.last_note}', which is shorter than the "
                 f"{c.limits.note_minimum_characters}-character minimum or a "
-                "known placeholder.")
+                "one of the phrases that carry no information.")
     ),
     explanation="The work order is on a hold status and carries no note "
                 "beyond a placeholder.",
+    limits=("note_minimum_characters",),
     reads=("Status", "Last Note"),
 )
 
@@ -311,6 +319,7 @@ VENDOR_WORK_OVERDUE = Rule(
         + (f"; vendor is {c.wo.vendor}." if c.wo.vendor.strip() else ".")
     ),
     explanation="Contracted work open beyond the vendor threshold.",
+    limits=("vendor_overdue_days",),
     reads=("Assignment Type", "Status", "Opened Date", "Vendor"),
 )
 
@@ -358,6 +367,7 @@ HIGH_ESTIMATED_COST = Rule(
         f"review threshold of {_money(c.limits.cost_review_amount)}."
     ),
     explanation="The estimated cost is at or above the review threshold.",
+    limits=("cost_review_amount",),
     reads=("Estimated Cost", "Status"),
 )
 
@@ -386,6 +396,7 @@ COST_OVERRUN = Rule(
     ),
     explanation="The actual cost exceeds the estimate by more than both the "
                 "overrun ratio and the minimum variance.",
+    limits=("cost_overrun_ratio", "cost_overrun_minimum"),
     reads=("Estimated Cost", "Actual Cost"),
 )
 
@@ -436,6 +447,7 @@ PM_DUE_SOON = Rule(
         f"{c.limits.pm_due_soon_days}-day window."
     ),
     explanation="Preventive work is due within the due-soon window.",
+    limits=("pm_due_soon_days",),
     reads=("Work Type", "Due Date", "Status"),
 )
 

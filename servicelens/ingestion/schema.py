@@ -68,7 +68,7 @@ COLUMNS: tuple[Column, ...] = (
         aliases=("Asset", "Asset Number", "Asset Tag", "Equipment",
                  "Equipment ID", "Equipment Number", "Unit", "Unit Number"),
         purpose="Links work to the thing it was performed on. Kept as text "
-                "so leading zeros survive.",
+                "so an identifier beginning with a zero keeps it.",
     ),
     Column(
         STATUS, required=True,

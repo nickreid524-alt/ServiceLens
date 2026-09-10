@@ -101,6 +101,13 @@ class Rule:
     basis: Callable[[Context], str]
     explanation: str = ""
     reads: tuple = ()
+    limits: tuple = ()
+    """Names of the `Thresholds` fields this rule reads.
+
+    Declared so the rule catalogue can show the thresholds actually in force
+    alongside each rule, instead of a second hand-maintained list that would
+    drift away from the policy.
+    """
 
     def evaluate(self, context: Context) -> Finding | None:
         """The finding this rule produces for `context`, or None."""
@@ -147,8 +154,13 @@ class RuleSet:
         findings.sort(key=lambda finding: finding.sort_key)
         return findings
 
-    def catalogue(self) -> list[dict]:
-        """The rule set as plain data, for display and documentation."""
+    def catalogue(self, policy: Policy = DEFAULT_POLICY) -> list[dict]:
+        """The rule set as plain data, for display and documentation.
+
+        Threshold values are resolved from `policy` at call time, so a screen
+        rendering this always shows the limits actually in force rather than
+        a description of them written somewhere else.
+        """
         return [
             {
                 "key": rule.key,
@@ -157,6 +169,11 @@ class RuleSet:
                 "domain": rule.domain.label,
                 "explanation": rule.explanation,
                 "reads": list(rule.reads),
+                "limits": [
+                    (name, getattr(policy.thresholds, name))
+                    for name in rule.limits
+                    if hasattr(policy.thresholds, name)
+                ],
             }
             for rule in self.rules
         ]

@@ -326,7 +326,7 @@ class WorkOrder:
         return 0.0
 
     def age_days(self, as_of: date) -> int | None:
-        """Days the work order has been open, or None when undatable.
+        """How long this work order has been running, or None if undatable.
 
         Closed work is measured to its completion date, open work to `as_of`.
         A future opened date yields a negative number rather than a guess -

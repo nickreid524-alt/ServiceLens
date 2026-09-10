@@ -1,10 +1,11 @@
-"""A read-only .xlsx reader built on the standard library.
+"""Reading .xlsx files with nothing but the standard library.
 
 An .xlsx file is a zip archive of XML parts. Reading one needs `zipfile` and
 `ElementTree` and nothing else, so ServiceLens carries no spreadsheet
 dependency at all.
 
-The workbook is opened in read mode. Nothing is ever written back to it.
+Files are only ever read. ServiceLens has no code path that writes to a
+source workbook at all.
 
 Three details make the difference between a toy reader and a usable one:
 
@@ -192,8 +193,8 @@ class WorkbookReader:
         names = archive.namelist()
         if "xl/workbook.xml" not in names:
             raise WorkbookError(
-                "This file is not an Excel workbook. Save the report as "
-                "Excel Workbook (.xlsx) and try again.")
+                "No workbook part was found inside this file, so it is "
+                "not a spreadsheet ServiceLens can read.")
         try:
             book = ET.fromstring(archive.read("xl/workbook.xml"))
         except ET.ParseError as error:
@@ -296,11 +297,11 @@ class WorkbookReader:
 
         except zipfile.BadZipFile as error:
             raise WorkbookError(
-                "This is not a readable .xlsx file. If it is an older .xls "
-                "workbook, re-save it as Excel Workbook (.xlsx)."
+                "This file could not be opened as a spreadsheet package. An "
+                "older .xls file will need converting to .xlsx first."
             ) from error
         except (OSError, ET.ParseError) as error:
-            raise WorkbookError(f"The workbook could not be read: {error}"
+            raise WorkbookError(f"Reading the workbook failed: {error}"
                                 ) from error
 
     @classmethod
