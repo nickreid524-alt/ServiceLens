@@ -1,0 +1,7 @@
+# Normalise line endings: LF in the repository, native in the working copy.
+* text=auto eol=lf
+
+# Binary assets Git must not touch.
+*.xlsx binary
+*.pdf binary
+*.png binary
